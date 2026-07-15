@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Loading Automation Income Lab…</title>
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#08101c;color:#f6f8ff;font-family:Inter,system-ui,sans-serif}.loading{text-align:center;padding:24px}.loading b{display:block;font-size:22px;margin-bottom:8px}.loading span{color:#9eabc4}
+</style>
+</head>
+<body>
+<div class="loading"><b>Opening the Automation Income Lab</b><span>Loading your enhanced interview…</span></div>
+<script>
+(async()=>{
+  try{
+    let html=await fetch('./index.html',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Could not load the quiz');return r.text()});
+
+    html=html.replace('</style>',`.answerExtras{margin-top:16px;padding-top:16px;border-top:1px solid #2b3c59}.ownAnswerBtn{width:100%;text-align:left;padding:14px 16px;border-radius:14px;border:1px dashed #57709a;background:#101c32;color:#dce6fa;font:inherit;font-weight:750;cursor:pointer}.ownAnswerBtn:hover,.ownAnswerBtn.selected{border-color:var(--accent);background:#16342f}.answerLabel{display:block;margin:14px 0 7px;color:#b9c6dc;font-size:13px;font-weight:800}.answerExtras textarea{min-height:82px}.commentBox{margin-top:14px;padding:14px;border-radius:14px;background:#0c1729;border:1px solid #263957}.commentHint{color:#8392ad;font-size:12px;margin-top:6px;line-height:1.4}</style>`);
+
+    html=html.replace(
+      "let state=JSON.parse(localStorage.getItem('automationIncomeLabV2')||'{}');let i=Number(localStorage.getItem('automationIncomeIndexV2')||0);let selected=[];const $=id=>document.getElementById(id);",
+      "let state=JSON.parse(localStorage.getItem('automationIncomeLabV2')||'{}');let customAnswers=JSON.parse(localStorage.getItem('automationIncomeCustomAnswersV3')||'{}');let answerComments=JSON.parse(localStorage.getItem('automationIncomeAnswerCommentsV3')||'{}');let i=Number(localStorage.getItem('automationIncomeIndexV2')||0);let selected=[];const $=id=>document.getElementById(id);"
+    );
+
+    const renderFn=`function render(){
+      const x=questions[i];
+      $('question').textContent=x.q;$('why').textContent=x.why;$('kicker').textContent=\`${'${i+1}'} of ${'${questions.length}'} · ${'${x.k}'}\`;$('progress').style.width=\`${'${(i/questions.length)*100}'}%\`;$('pushback').classList.add('hidden');$('backBtn').disabled=i===0;
+      const a=$('answerArea');a.innerHTML='';selected=Array.isArray(state[x.id])?[...state[x.id]]:[];
+      if(x.type==='choice'||x.type==='multi'){
+        const wrap=document.createElement('div');wrap.className='choices';
+        x.options.forEach(o=>{const b=document.createElement('button');b.className='choice'+((x.type==='multi'?selected.includes(o):state[x.id]===o)&&!customAnswers[x.id]?' selected':'');b.textContent=o;b.onclick=()=>{if(x.type==='multi'){selected.includes(o)?selected=selected.filter(v=>v!==o):selected.push(o);state[x.id]=selected}else{state[x.id]=o;customAnswers[x.id]='';[...wrap.children].forEach(c=>c.classList.remove('selected'));b.classList.add('selected')}save();render();pushback(x)};wrap.appendChild(b)});
+        a.appendChild(wrap);
+        const extras=document.createElement('div');extras.className='answerExtras';
+        const ownBtn=document.createElement('button');ownBtn.className='ownAnswerBtn'+(customAnswers[x.id]?' selected':'');ownBtn.textContent=customAnswers[x.id]?'My own answer ✓':'Write my own answer';extras.appendChild(ownBtn);
+        const ownWrap=document.createElement('div');ownWrap.className=customAnswers[x.id]?'':'hidden';
+        const ownLabel=document.createElement('label');ownLabel.className='answerLabel';ownLabel.textContent=x.type==='multi'?'Add another answer in your own words':'Answer in your own words';ownWrap.appendChild(ownLabel);
+        const own=document.createElement('textarea');own.placeholder='Type the answer that fits you better…';own.value=customAnswers[x.id]||'';own.oninput=e=>{customAnswers[x.id]=e.target.value;if(x.type==='choice'&&e.target.value.trim())state[x.id]='';ownBtn.classList.toggle('selected',!!e.target.value.trim());ownBtn.textContent=e.target.value.trim()?'My own answer ✓':'Write my own answer';save()};ownWrap.appendChild(own);extras.appendChild(ownWrap);
+        ownBtn.onclick=()=>{ownWrap.classList.toggle('hidden');if(!ownWrap.classList.contains('hidden'))setTimeout(()=>own.focus(),40)};
+        const commentBox=document.createElement('div');commentBox.className='commentBox';
+        const commentLabel=document.createElement('label');commentLabel.className='answerLabel';commentLabel.style.marginTop='0';commentLabel.textContent='Optional comment on this answer';commentBox.appendChild(commentLabel);
+        const comment=document.createElement('textarea');comment.placeholder='Explain, qualify, or add context to your selection…';comment.value=answerComments[x.id]||'';comment.oninput=e=>{answerComments[x.id]=e.target.value;save()};commentBox.appendChild(comment);
+        const hint=document.createElement('div');hint.className='commentHint';hint.textContent='This comment will be included in the ChatGPT handoff and JSON export.';commentBox.appendChild(hint);extras.appendChild(commentBox);a.appendChild(extras);
+      }else{
+        const el=document.createElement('textarea');el.placeholder=x.placeholder||'';el.value=state[x.id]||'';el.oninput=e=>{state[x.id]=e.target.value;save()};a.appendChild(el);setTimeout(()=>el.focus(),60)
+      }
+      pushback(x)
+    }`;
+    html=html.replace(/function render\(\)\{[\s\S]*?\}\nfunction pushback/,renderFn+'\nfunction pushback');
+
+    const saveFn=`function save(){localStorage.setItem('automationIncomeLabV2',JSON.stringify(state));localStorage.setItem('automationIncomeCustomAnswersV3',JSON.stringify(customAnswers));localStorage.setItem('automationIncomeAnswerCommentsV3',JSON.stringify(answerComments));localStorage.setItem('automationIncomeIndexV2',i);$('status').textContent='Saved locally';setTimeout(()=>$('status').textContent='Private · local only',900)}`;
+    html=html.replace(/function save\(\)\{[\s\S]*?\}\nfunction allValues/,saveFn+'\nfunction allValues');
+
+    html=html.replace("function allValues(){return Object.values(state).flatMap(v=>Array.isArray(v)?v:[v]).filter(Boolean)}","function allValues(){return [...Object.values(state),...Object.values(customAnswers)].flatMap(v=>Array.isArray(v)?v:[v]).filter(Boolean)}");
+
+    const exportFn=`function buildExport(top){let t='AUTOMATION INCOME LAB — CHATGPT HANDOFF\\n\\nKNOWN TECH STACK:\\n- '+STACK.join('\\n- ')+'\\n\\nKNOWN OPERATING CONTEXT:\\n- I work online about eight hours on weekdays.\\n- I can periodically supervise agents, handle short manual tasks, and babysit processes.\\n- I prefer using existing subscriptions and the Windows mini PC rather than paid APIs.\\n- I want low-contact or distribution-led income, not default consulting.\\n\\nINTERVIEW ANSWERS:\\n';questions.forEach(q=>{let v=state[q.id];if(Array.isArray(v))v=v.join(', ');const own=(customAnswers[q.id]||'').trim();const comment=(answerComments[q.id]||'').trim();t+=\`\\n${'${q.q}'}\\nSelected answer: ${'${v||\'[blank]\'}'}\`;if(own)t+=\`\\nMy written answer: ${'${own}'}\`;if(comment)t+=\`\\nComment/context: ${'${comment}'}\`;t+='\\n'});t+='\\nTOP APP-GENERATED HYPOTHESES:\\n';top.forEach((x,n)=>t+=\`${'${n+1}'}. ${'${x.title}'} (${'${x.score}'}% internal fit score)\\n   Revenue path: ${'${x.money}'}\\n   Main weakness: ${'${x.catch}'}\\n   First test: ${'${x.first}'}\\n\`);t+='\\nINSTRUCTIONS FOR CHATGPT:\\nInterview me further rather than immediately choosing a business. Act as a skeptical opportunity researcher and automation architect. Give extra weight to my written answers and comments, especially when they conflict with a predefined selection. Explore unconventional or underused income models that fit my exact subscriptions, mini PC, GitHub workflow, enterprise IT knowledge, and ability to supervise processes during the workday. Do not default to consulting, coaching, courses, generic content creation, dropshipping, or building a SaaS. Low-contact models are preferred, but clearly identify the distribution mechanism and who pays. Reject ideas that rely on employer-confidential information, prohibited automation, scraping that violates terms, unverifiable passive-income claims, or weeks of building before testing demand. Ask one high-value question at a time and use each answer to narrow the field.';return t}`;
+    html=html.replace(/function buildExport\(top\)\{[\s\S]*?\}\nfunction next/,exportFn+'\nfunction next');
+
+    html=html.replace(/function next\(\)\{[\s\S]*?\}\nfunction finish/,"function next(){const x=questions[i];const normal=state[x.id]&&(Array.isArray(state[x.id])?state[x.id].length:true);const own=(customAnswers[x.id]||'').trim();if(!normal&&!own){alert('Choose an option or write your own answer before moving on.');return}if(i<questions.length-1){i++;save();render()}else finish()}\nfunction finish");
+
+    html=html.replace(
+      /\$\('downloadBtn'\)\.onclick=\(\)=>\{[\s\S]*?URL\.revokeObjectURL\(a\.href\)\}/,
+      "$('downloadBtn').onclick=()=>{const top=rankedIdeas().slice(0,3);const blob=new Blob([JSON.stringify({created:new Date().toISOString(),stack:STACK,operating_context:{works_online_weekdays:true,can_supervise_processes:true,subscriptions_first:true},answers:state,written_answers:customAnswers,answer_comments:answerComments,top_hypotheses:top,chatgpt_handoff:buildExport(top)},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='automation-income-lab.json';a.click();URL.revokeObjectURL(a.href)}"
+    );
+
+    document.open();document.write(html);document.close();
+  }catch(error){document.body.innerHTML='<div class="loading"><b>The quiz could not load.</b><span>'+error.message+'</span></div>'}
+})();
+</script>
+</body>
+</html>
