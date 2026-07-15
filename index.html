@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Money Now Interview</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a30;--panel2:#18223d;--text:#f5f7ff;--muted:#9da9c6;--accent:#78e6c1;--accent2:#7ea7ff;--warn:#ffca6b;--danger:#ff7c8b;--line:#273351}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(circle at top,#18264d 0,#0b1020 40%);color:var(--text);min-height:100vh}
+.app{max-width:760px;margin:auto;padding:20px 16px 48px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.brand{font-weight:800;letter-spacing:.2px}.pill{font-size:12px;color:var(--accent);border:1px solid #2d6d61;background:#102b29;padding:7px 10px;border-radius:999px}.progressWrap{height:9px;background:#1c2948;border-radius:99px;overflow:hidden;margin:12px 0 22px}.progress{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:.3s}
+.card{background:linear-gradient(180deg,rgba(24,34,61,.98),rgba(17,25,46,.98));border:1px solid var(--line);border-radius:24px;padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.35)}
+.kicker{font-size:13px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.12em}.question{font-size:clamp(24px,4vw,36px);line-height:1.15;margin:10px 0 12px}.why{color:var(--muted);line-height:1.55;margin-bottom:20px}.choices{display:grid;gap:10px}.choice{width:100%;text-align:left;padding:15px 16px;border-radius:14px;border:1px solid #334263;background:#16213b;color:var(--text);font-size:16px;cursor:pointer}.choice:hover,.choice.selected{border-color:var(--accent);background:#17332f}.input,textarea{width:100%;background:#0f1730;color:var(--text);border:1px solid #334263;border-radius:14px;padding:14px 15px;font:inherit;outline:none}.input:focus,textarea:focus{border-color:var(--accent)}textarea{min-height:120px;resize:vertical}
+.actions{display:flex;gap:10px;margin-top:20px}.btn{border:0;border-radius:14px;padding:13px 17px;font-weight:800;cursor:pointer}.primary{background:linear-gradient(90deg,var(--accent),#85d9ff);color:#07151a;flex:1}.secondary{background:#202d4d;color:var(--text)}.ghost{background:transparent;color:var(--muted);border:1px solid #334263}.note{margin-top:16px;padding:13px 14px;border-radius:14px;background:#202641;border-left:4px solid var(--warn);color:#e7eaf4;line-height:1.5}.hidden{display:none!important}
+.summary h2{font-size:28px;margin-top:0}.scoreGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}.score{background:#10192f;border:1px solid var(--line);border-radius:16px;padding:14px}.score b{font-size:23px;display:block}.score span{color:var(--muted);font-size:12px}.exportBox{white-space:pre-wrap;background:#0d1529;border:1px solid #2b3856;padding:14px;border-radius:14px;color:#dce5ff;max-height:300px;overflow:auto;font-size:13px;line-height:1.45}.footer{color:#71809f;font-size:12px;text-align:center;margin-top:18px}@media(max-width:560px){.card{padding:19px}.scoreGrid{grid-template-columns:1fr}.actions{flex-wrap:wrap}.secondary,.ghost{flex:1}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top"><div class="brand">MONEY NOW</div><div class="pill" id="status">Saved locally</div></div>
+  <div class="progressWrap"><div class="progress" id="progress"></div></div>
+  <main class="card" id="card">
+    <section id="interview">
+      <div class="kicker" id="kicker">Reality-first interview</div>
+      <h1 class="question" id="question"></h1>
+      <div class="why" id="why"></div>
+      <div id="answerArea"></div>
+      <div class="note hidden" id="pushback"></div>
+      <div class="actions">
+        <button class="btn ghost" id="backBtn">Back</button>
+        <button class="btn secondary" id="saveBtn">Save</button>
+        <button class="btn primary" id="nextBtn">Continue</button>
+      </div>
+    </section>
+    <section class="summary hidden" id="summary">
+      <div class="kicker">Interview complete</div>
+      <h2>Your Money-Now Opportunity Brief</h2>
+      <p class="why">This is not a finished business plan. It is a grounded handoff for ChatGPT to challenge, score, and turn into a first paid offer.</p>
+      <div class="scoreGrid"><div class="score"><b id="speedScore">—</b><span>Speed to revenue</span></div><div class="score"><b id="fitScore">—</b><span>Personal fit</span></div><div class="score"><b id="riskScore">—</b><span>Execution risk</span></div></div>
+      <div class="exportBox" id="exportBox"></div>
+      <div class="actions">
+        <button class="btn secondary" id="copyBtn">Copy for ChatGPT</button>
+        <button class="btn secondary" id="downloadBtn">Download JSON</button>
+        <button class="btn primary" id="restartBtn">Review answers</button>
+      </div>
+    </section>
+  </main>
+  <div class="footer">Private by default: answers stay in this browser unless you export them.</div>
+</div>
+<script>
+const questions=[
+{id:'income',k:'Target',q:'What monthly income would make this worth doing?',why:'Use a number that matters, but does not force you into fantasy economics.',type:'choice',options:['$500/month','$1,000/month','$2,500/month','$5,000+/month']},
+{id:'deadline',k:'Urgency',q:'How quickly must the first real customer pay you?',why:'This determines whether we sell a service now or build an asset later.',type:'choice',options:['Within 7 days','Within 30 days','Within 90 days','No hard deadline']},
+{id:'hours',k:'Capacity',q:'How many hours can you reliably protect each week?',why:'Not your ideal week. Your normal week with work, health, marriage, and congregation responsibilities.',type:'choice',options:['2–3 hours','4–6 hours','7–10 hours','10+ hours']},
+{id:'selling',k:'Sales tolerance',q:'Which kind of selling can you actually tolerate?',why:'A good offer still fails if you avoid the sales motion required to get paid.',type:'choice',options:['Warm referrals only','Direct outreach to businesses','Content that attracts leads','Marketplaces and platforms','I strongly dislike all selling']},
+{id:'buyer',k:'Buyer clarity',q:'Who already trusts your judgment enough to consider paying you?',why:'Think real people or groups, not a broad demographic.',type:'text',placeholder:'Examples: small law firms, local businesses, Intune teams, people setting up AI workflows…'},
+{id:'pain',k:'Problem value',q:'What expensive or frustrating problem have you solved repeatedly?',why:'Describe the before-and-after result, not just the technology used.',type:'textarea',placeholder:'I helped ___ go from ___ to ___ by…'},
+{id:'proof',k:'Credibility',q:'What proof can you show without exposing employer or client information?',why:'Proof can be a demo, checklist, sample audit, sanitized workflow, testimonial, or measurable result.',type:'textarea',placeholder:'List concrete proof, examples, or assets you could safely show.'},
+{id:'offer',k:'Delivery',q:'Which offer model feels most realistic for the next 30 days?',why:'Fast money usually comes from a narrow service, not an app, course, or passive-income system.',type:'choice',options:['Paid 60–90 minute advisory session','Fixed-price audit or assessment','Done-for-you setup','Small recurring support package','Digital product or course']},
+{id:'price',k:'Pricing',q:'What price could you confidently ask from the first buyer?',why:'Price should match the cost of the problem and your confidence delivering the result.',type:'choice',options:['$100–$250','$300–$750','$1,000–$2,500','$3,000+']},
+{id:'constraints',k:'Boundaries',q:'What must this business avoid?',why:'Include conflicts with your employer, regulated advice, privacy risks, physical strain, or work you would resent.',type:'textarea',placeholder:'I will not… / I cannot… / I need to avoid…'},
+{id:'assets',k:'Leverage',q:'Which existing assets can help you sell or deliver immediately?',why:'Choose what already exists. Do not count projects that still need weeks of building.',type:'multi',options:['Deep Intune/MDM expertise','Legal-industry technology context','AI subscription stack','Mini PC and agent workflows','GitHub/project documentation','Teaching and troubleshooting experience','Local professional network','Personal recovery/life experience']},
+{id:'commitment',k:'Execution test',q:'What uncomfortable action will you take in the next 72 hours?',why:'Revenue requires exposure to rejection. Pick a real action tied to a potential buyer.',type:'textarea',placeholder:'I will contact ___ people / publish ___ / offer ___ to ___.'}
+];
+let state=JSON.parse(localStorage.getItem('moneyNowInterview')||'{}');let i=Number(localStorage.getItem('moneyNowIndex')||0);let selected=[];
+const $=id=>document.getElementById(id);
+function render(){const x=questions[i];$('question').textContent=x.q;$('why').textContent=x.why;$('kicker').textContent=`${i+1} of ${questions.length} · ${x.k}`;$('progress').style.width=`${(i/questions.length)*100}%`;$('pushback').classList.add('hidden');$('backBtn').disabled=i===0;const a=$('answerArea');a.innerHTML='';selected=Array.isArray(state[x.id])?[...state[x.id]]:[];
+if(x.type==='choice'||x.type==='multi'){const wrap=document.createElement('div');wrap.className='choices';x.options.forEach(o=>{const b=document.createElement('button');b.className='choice'+((x.type==='multi'?selected.includes(o):state[x.id]===o)?' selected':'');b.textContent=o;b.onclick=()=>{if(x.type==='multi'){selected.includes(o)?selected=selected.filter(v=>v!==o):selected.push(o);state[x.id]=selected}else{state[x.id]=o;[...wrap.children].forEach(c=>c.classList.remove('selected'));b.classList.add('selected')}save();checkPushback(x)};wrap.appendChild(b)});a.appendChild(wrap)}else{const el=document.createElement(x.type==='textarea'?'textarea':'input');el.className=x.type==='textarea'?'':'input';el.placeholder=x.placeholder||'';el.value=state[x.id]||'';el.oninput=e=>{state[x.id]=e.target.value;save()};a.appendChild(el);setTimeout(()=>el.focus(),80)}checkPushback(x)}
+function checkPushback(x){let msg='';if(x.id==='deadline'&&state[x.id]==='Within 7 days')msg='Reality check: seven-day revenue means selling a simple service to people you can reach now. Building software first is almost certainly the wrong move.';if(x.id==='selling'&&state[x.id]==='I strongly dislike all selling')msg='Pushback: no legitimate business removes selling. We can choose a lower-friction sales method, but avoiding it entirely means this will remain a hobby.';if(x.id==='offer'&&state[x.id]==='Digital product or course')msg='Pushback: a digital product is unlikely to produce immediate revenue without an existing audience. We should validate demand through a paid service first.';if(msg){$('pushback').textContent=msg;$('pushback').classList.remove('hidden')}else $('pushback').classList.add('hidden')}
+function save(){localStorage.setItem('moneyNowInterview',JSON.stringify(state));localStorage.setItem('moneyNowIndex',i);$('status').textContent='Saved locally';setTimeout(()=>$('status').textContent='Private · local only',900)}
+function next(){const x=questions[i];if(!state[x.id]||(Array.isArray(state[x.id])&&!state[x.id].length)){alert('Give this one a real answer before moving on.');return}if(i<questions.length-1){i++;save();render()}else finish()}
+function score(){let speed=5,fit=5,risk=5;if(state.deadline==='Within 7 days')speed+=2;if(state.offer==='Digital product or course')speed-=3;if(state.offer==='Paid 60–90 minute advisory session'||state.offer==='Fixed-price audit or assessment')speed+=2;if(state.selling==='I strongly dislike all selling')risk+=3;if(state.hours==='2–3 hours')risk+=1;if((state.assets||[]).length>=4)fit+=2;if(state.price==='$3,000+')risk+=1;return{speed:Math.max(1,Math.min(10,speed)),fit:Math.max(1,Math.min(10,fit)),risk:Math.max(1,Math.min(10,risk))}}
+function buildExport(){let t='MONEY NOW INTERVIEW — CHATGPT HANDOFF\n\n';questions.forEach(q=>{let v=state[q.id];if(Array.isArray(v))v=v.join(', ');t+=`${q.q}\nAnswer: ${v||'[blank]'}\n\n`});t+='INSTRUCTIONS FOR CHATGPT:\nAct as a blunt but constructive business strategist. Use these answers to identify the three most viable near-term offers. Reject ideas with weak demand, long build time, employer conflict, or unrealistic passive-income assumptions. Score each offer for speed to first revenue, buyer access, proof, pricing power, delivery effort, and personal fit. Then recommend one offer and give me only the first concrete execution step.';return t}
+function finish(){save();$('interview').classList.add('hidden');$('summary').classList.remove('hidden');$('progress').style.width='100%';const s=score();$('speedScore').textContent=s.speed+'/10';$('fitScore').textContent=s.fit+'/10';$('riskScore').textContent=s.risk+'/10';$('exportBox').textContent=buildExport()}
+$('nextBtn').onclick=next;$('backBtn').onclick=()=>{if(i>0){i--;save();render()}};$('saveBtn').onclick=save;$('copyBtn').onclick=async()=>{await navigator.clipboard.writeText(buildExport());$('copyBtn').textContent='Copied';setTimeout(()=>$('copyBtn').textContent='Copy for ChatGPT',1200)};$('downloadBtn').onclick=()=>{const blob=new Blob([JSON.stringify({created:new Date().toISOString(),answers:state,chatgpt_handoff:buildExport()},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='money-now-interview.json';a.click();URL.revokeObjectURL(a.href)};$('restartBtn').onclick=()=>{$('summary').classList.add('hidden');$('interview').classList.remove('hidden');i=0;render()};render();
+</script>
+</body>
+</html>
